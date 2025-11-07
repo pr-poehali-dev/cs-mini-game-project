@@ -318,35 +318,42 @@ const Game = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-6xl mx-auto space-y-4">
-        <div className="flex justify-between items-center">
-          <div className="flex gap-4 text-xs text-foreground">
-            <div className="bg-card px-3 py-2 border border-border retro-shadow">
-              ❤️ HP: {player.health}
+    <div className="min-h-screen bg-background p-0 md:p-4">
+      <div className="max-w-6xl mx-auto space-y-2 md:space-y-4">
+        <div className="flex justify-between items-center px-2 py-2 md:px-0">
+          <div className="flex gap-2 md:gap-4 text-xs text-foreground flex-wrap">
+            <div className="bg-card px-2 py-1 md:px-3 md:py-2 border border-border retro-shadow">
+              ❤️ {player.health}
             </div>
-            <div className="bg-card px-3 py-2 border border-border retro-shadow">
+            <div className="bg-card px-2 py-1 md:px-3 md:py-2 border border-border retro-shadow">
               💰 ${player.money}
             </div>
-            <div className="bg-card px-3 py-2 border border-border retro-shadow">
-              💀 Kills: {kills}
+            <div className="bg-card px-2 py-1 md:px-3 md:py-2 border border-border retro-shadow">
+              💀 {kills}
             </div>
-            <div className="bg-card px-3 py-2 border border-border retro-shadow">
-              🌊 Wave: {wave}
+            <div className="bg-card px-2 py-1 md:px-3 md:py-2 border border-border retro-shadow">
+              🌊 {wave}
             </div>
           </div>
-          <Button
-            onClick={() => setShowShop(!showShop)}
-            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground retro-shadow text-xs px-4 py-2"
-          >
-            🛒 МАГАЗИН (B)
-          </Button>
+          {!isMobile && (
+            <Button
+              onClick={() => setShowShop(!showShop)}
+              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground retro-shadow text-xs px-4 py-2"
+            >
+              🛒 МАГАЗИН (B)
+            </Button>
+          )}
         </div>
 
         <div 
           ref={canvasRef}
-          className="relative w-full aspect-[4/3] bg-muted border-4 border-border overflow-hidden retro-shadow"
-          style={{ maxHeight: '600px', cursor: 'crosshair' }}
+          className="relative w-full bg-muted border-0 md:border-4 border-border overflow-hidden retro-shadow"
+          style={{ 
+            height: isMobile ? 'calc(100vh - 60px)' : 'auto',
+            aspectRatio: isMobile ? 'auto' : '4/3',
+            maxHeight: isMobile ? 'none' : '600px',
+            cursor: 'crosshair' 
+          }}
         >
           <div
             className="absolute w-8 h-8 bg-secondary border-2 border-foreground transition-all"
@@ -391,8 +398,14 @@ const Game = () => {
 
           {isMobile && (
             <>
+              <button
+                onClick={() => setShowShop(!showShop)}
+                className="absolute top-2 right-2 bg-secondary text-secondary-foreground px-3 py-2 text-xs border-2 border-foreground retro-shadow z-10"
+              >
+                🛒
+              </button>
               <div
-                className="absolute bottom-4 left-4 w-32 h-32 bg-muted/50 border-2 border-border rounded-full"
+                className="absolute bottom-4 left-4 w-24 h-24 md:w-32 md:h-32 bg-muted/50 border-2 border-border rounded-full"
                 onTouchStart={(e) => {
                   setIsJoystickActive(true);
                   const touch = e.touches[0];
@@ -444,7 +457,7 @@ const Game = () => {
                   e.preventDefault();
                   shoot();
                 }}
-                className="absolute bottom-4 right-4 w-20 h-20 bg-primary border-4 border-foreground rounded-full flex items-center justify-center text-3xl active:scale-95 retro-shadow"
+                className="absolute bottom-4 right-4 w-16 h-16 md:w-20 md:h-20 bg-primary border-4 border-foreground rounded-full flex items-center justify-center text-2xl md:text-3xl active:scale-95 retro-shadow"
               >
                 💥
               </button>
@@ -453,8 +466,18 @@ const Game = () => {
         </div>
 
         {showShop && (
-          <Card className="p-6 bg-card border-2 border-primary retro-shadow">
-            <h3 className="text-xl text-primary pixel-text mb-6">МАГАЗИН ОРУЖИЯ</h3>
+          <Card className={`p-4 md:p-6 bg-card border-2 border-primary retro-shadow ${isMobile ? 'fixed inset-4 z-50 overflow-y-auto' : ''}`}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg md:text-xl text-primary pixel-text">МАГАЗИН ОРУЖИЯ</h3>
+              {isMobile && (
+                <button
+                  onClick={() => setShowShop(false)}
+                  className="text-foreground text-xl px-2"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {Object.entries(WEAPONS).map(([name, weapon]) => (
                 <div key={name} className="border-2 border-border p-4 space-y-3">
