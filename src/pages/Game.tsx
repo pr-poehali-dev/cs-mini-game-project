@@ -162,7 +162,7 @@ const Game = () => {
       setPlayer(prev => {
         let newX = prev.x;
         let newY = prev.y;
-        const speed = 3;
+        const speed = 5;
 
         if (keysPressed.current.has('w') || keysPressed.current.has('arrowup')) newY -= speed;
         if (keysPressed.current.has('s') || keysPressed.current.has('arrowdown')) newY += speed;
@@ -198,8 +198,8 @@ const Game = () => {
           }
           return {
             ...enemy,
-            x: enemy.x + (dx / dist) * 1.5,
-            y: enemy.y + (dy / dist) * 1.5
+            x: enemy.x + (dx / dist) * 0.8,
+            y: enemy.y + (dy / dist) * 0.8
           };
         });
       });
