@@ -58,6 +58,9 @@ const Game = () => {
   const [kills, setKills] = useState(0);
   const [wave, setWave] = useState(1);
   const [selectedSkin, setSelectedSkin] = useState<string>('🔫');
+  const [isMobile, setIsMobile] = useState(false);
+  const [joystickPos, setJoystickPos] = useState({ x: 0, y: 0 });
+  const [isJoystickActive, setIsJoystickActive] = useState(false);
   const keysPressed = useRef<Set<string>>(new Set());
   const lastShot = useRef<number>(0);
   const mousePos = useRef({ x: 0, y: 0 });
@@ -118,10 +121,18 @@ const Game = () => {
   };
 
   useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
     if (!gameStarted) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       keysPressed.current.add(e.key.toLowerCase());
+      if (e.key.toLowerCase() === 'b') setShowShop(prev => !prev);
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -162,12 +173,17 @@ const Game = () => {
       setPlayer(prev => {
         let newX = prev.x;
         let newY = prev.y;
-        const speed = 5;
+        const speed = 3;
 
-        if (keysPressed.current.has('w') || keysPressed.current.has('arrowup')) newY -= speed;
-        if (keysPressed.current.has('s') || keysPressed.current.has('arrowdown')) newY += speed;
-        if (keysPressed.current.has('a') || keysPressed.current.has('arrowleft')) newX -= speed;
-        if (keysPressed.current.has('d') || keysPressed.current.has('arrowright')) newX += speed;
+        if (keysPressed.current.has('w')) newY -= speed;
+        if (keysPressed.current.has('s')) newY += speed;
+        if (keysPressed.current.has('a')) newX -= speed;
+        if (keysPressed.current.has('d')) newX += speed;
+
+        if (isJoystickActive) {
+          newX += joystickPos.x * speed * 0.02;
+          newY += joystickPos.y * speed * 0.02;
+        }
 
         newX = Math.max(20, Math.min(780, newX));
         newY = Math.max(20, Math.min(580, newY));
@@ -372,6 +388,68 @@ const Game = () => {
               }}
             />
           ))}
+
+          {isMobile && (
+            <>
+              <div
+                className="absolute bottom-4 left-4 w-32 h-32 bg-muted/50 border-2 border-border rounded-full"
+                onTouchStart={(e) => {
+                  setIsJoystickActive(true);
+                  const touch = e.touches[0];
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const centerX = rect.left + rect.width / 2;
+                  const centerY = rect.top + rect.height / 2;
+                  setJoystickPos({
+                    x: touch.clientX - centerX,
+                    y: touch.clientY - centerY
+                  });
+                }}
+                onTouchMove={(e) => {
+                  if (!isJoystickActive) return;
+                  const touch = e.touches[0];
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const centerX = rect.left + rect.width / 2;
+                  const centerY = rect.top + rect.height / 2;
+                  const deltaX = touch.clientX - centerX;
+                  const deltaY = touch.clientY - centerY;
+                  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                  const maxDistance = 50;
+                  
+                  if (distance > maxDistance) {
+                    setJoystickPos({
+                      x: (deltaX / distance) * maxDistance,
+                      y: (deltaY / distance) * maxDistance
+                    });
+                  } else {
+                    setJoystickPos({ x: deltaX, y: deltaY });
+                  }
+                }}
+                onTouchEnd={() => {
+                  setIsJoystickActive(false);
+                  setJoystickPos({ x: 0, y: 0 });
+                }}
+              >
+                <div
+                  className="absolute w-12 h-12 bg-secondary border-2 border-foreground rounded-full"
+                  style={{
+                    left: '50%',
+                    top: '50%',
+                    transform: `translate(calc(-50% + ${joystickPos.x}px), calc(-50% + ${joystickPos.y}px))`
+                  }}
+                />
+              </div>
+
+              <button
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  shoot();
+                }}
+                className="absolute bottom-4 right-4 w-20 h-20 bg-primary border-4 border-foreground rounded-full flex items-center justify-center text-3xl active:scale-95 retro-shadow"
+              >
+                💥
+              </button>
+            </>
+          )}
         </div>
 
         {showShop && (
